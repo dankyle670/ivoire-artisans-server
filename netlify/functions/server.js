@@ -76,30 +76,21 @@ app.get('/api/users', async (req, res) => {
     const saltRounds = 10;
     const { name, email, password } = req.body;
     try {
-      //console.log('Database before user creation:', await User.find({}));
+      // Check if a user with the same email already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+      // Hash the password and create a new user
       const hashedPassword = await bcrypt.hash(password, saltRounds);
       const newUser = new User({ name, email, password: hashedPassword });
       await newUser.save();
-      //console.log('Database after user creation:', await User.find({}));
       res.status(201).json({ message: 'User created successfully' });
     } catch (error) {
       console.error('Error creating user:', error);
       res.status(500).json({ message: 'Error creating user', error: error.message });
     }
   });
-
-//app.post('/api/users', async (req, res) => {
-//    const saltRounds = 10;
-//    const { name, email, password } = req.body;
-//    try {
-//        const hashedPassword = await bcrypt.hash(password, saltRounds);
-//        const newUser = new User({ name, email, password: hashedPassword });
-//    await newUser.save();
-//    res.status(201).json({ message: 'User created successfully' });
-//  } catch (error) {
-//    res.status(500).json({ message: 'Error creating user', error });
-//  }
-//});
 
 // end of users route
 
