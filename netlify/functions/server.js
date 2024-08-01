@@ -93,7 +93,7 @@ const transporter = nodemailer.createTransport({
 
 
 const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `ivoireartisans://verify/email?token=${encodeURIComponent(token)}`;
+  const verificationUrl = `https://ivoire-artisans-verif.netlify.app?token=${encodeURIComponent(token)}`;
   console.log('Generated verification URL:', verificationUrl);
 
   const mailOptions = {
