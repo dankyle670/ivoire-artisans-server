@@ -93,7 +93,7 @@ const transporter = nodemailer.createTransport({
 
 
 const sendVerificationEmail = async (email, token) => {
-  const verificationUrl = `ivoireartisans://verify/email?token=${token}`;
+  const verificationUrl = `ivoireartisans://verify/email?token=${encodeURIComponent(token)}`;
   console.log('Generated verification URL:', verificationUrl);
 
   const mailOptions = {
@@ -119,6 +119,7 @@ const sendVerificationEmail = async (email, token) => {
     console.error('Error sending verification email:', error);
   }
 };
+
 
 
 
