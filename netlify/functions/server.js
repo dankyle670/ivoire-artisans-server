@@ -100,13 +100,7 @@ const sendVerificationEmail = async (email, token) => {
     from: process.env.OUTLOOK_USER,
     to: email,
     subject: 'Verify your email',
-    html: `<html>
-            <body>
-              <p>Please verify your email by clicking on the following link:</p>
-              <p><a href="${verificationUrl}">Verify Email</a></p>
-              <p>If you did not request this, please ignore this email.</p>
-            </body>
-          </html>`,
+    text: `Please verify your email by clicking on the following link: ${verificationUrl}`,
   };
 
   try {
