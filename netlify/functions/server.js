@@ -92,18 +92,44 @@ const transporter = nodemailer.createTransport({
 });
 
 
+const sendVerificationEmail = async (email, token) => {
+  const verificationUrl = `ivoireartisans://verify/email?token=${token}`;
+  console.log('Generated verification URL:', verificationUrl);
 
-const sendVerificationEmail = (email,   token) => {
-    const verificationUrl = `ivoireartisans://verify/email?token=${token}`;
-    const mailOptions = {
-      from: process.env.OUTLOOK_USER,
-      to: email,
-      subject: 'Verify your email',
-      html: `<p>Please verify your email by clicking on the following link: <a href="${verificationUrl}">Verify Email</a></p>`,
-    };
-
-    return transporter.sendMail(mailOptions);
+  const mailOptions = {
+    from: process.env.OUTLOOK_USER,
+    to: email,
+    subject: 'Verify your email',
+    html: `<html>
+            <body>
+              <p>Please verify your email by clicking on the following link:</p>
+              <p><a href="${verificationUrl}">Verify Email</a></p>
+              <p>If you did not request this, please ignore this email.</p>
+            </body>
+          </html>`,
   };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Verification email sent to:', email);
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+  }
+};
+
+
+
+//const sendVerificationEmail = (email,   token) => {
+//    const verificationUrl = `ivoireartisans://verify/email?token=${token}`;
+//    const mailOptions = {
+//      from: process.env.OUTLOOK_USER,
+//      to: email,
+//      subject: 'Verify your email',
+//      html: `<p>Please verify your email by clicking on the following link: <a href="${verificationUrl}">Verify Email</a></p>`,
+//    };
+//
+//    return transporter.sendMail(mailOptions);
+//  };
 
 // Routes
 
