@@ -1,3 +1,37 @@
+//const nodemailer = require('nodemailer');
+//require('dotenv').config();
+//
+//const OUTLOOK_USER = process.env.OUTLOOK_USER;
+//const OUTLOOK_PASS = process.env.OUTLOOK_PASS;
+//
+//console.log('OUTLOOK_USER:', OUTLOOK_USER);
+//console.log('OUTLOOK_PASS:', OUTLOOK_PASS ? 'Password is set' : 'Password is not set');
+//
+//const transporter = nodemailer.createTransport({
+//  service: 'hotmail',
+//  auth: {
+//    user: OUTLOOK_USER,
+//    pass: OUTLOOK_PASS
+//  }
+//});
+//
+//const mailOptions = {
+//  from: OUTLOOK_USER,
+//  to: 'daniel.komoe78@gmail.com, jdanielkom@gmail.com', // Can be a list of recipients
+//  subject: 'Subject of the email',
+//  text: 'Plaintext content of the email',
+//  html: '<b>HTML content of the email</b>'
+//};
+//
+//transporter.sendMail(mailOptions, (error, info) => {
+//  if (error) {
+//    return console.log('Error occurred:', error);
+//  }
+//  console.log('Message sent:', info.messageId);
+//});
+
+/////////////////////////////////////////////////////////////////////////:
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -50,16 +84,16 @@ const createVerificationToken = (userId) => {
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: 'hotmail',
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.OUTLOOK_USER,
+    pass: process.env.OUTLOOK_PASS,
   },
 });
 
 
 
-const sendVerificationEmail = (email, token) => {
+const sendVerificationEmail = (email,   token) => {
     const verificationUrl = `ivoireartisans://verify/email?token=${token}`;
     const mailOptions = {
       from: process.env.EMAIL_USER,
