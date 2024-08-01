@@ -100,16 +100,26 @@ const sendVerificationEmail = async (email, token) => {
     from: process.env.OUTLOOK_USER,
     to: email,
     subject: 'Verify your email',
-    text: `Please verify your email by clicking on the following link: ${verificationUrl}`,
+    html: `
+      <html>
+        <body>
+          <p>Please verify your email by clicking on the following link:</p>
+          <p><a href="${verificationUrl}" target="_blank" rel="noopener noreferrer">Verify Email</a></p>
+          <p>If you did not request this, please ignore this email.</p>
+        </body>
+      </html>
+    `,
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log('Verification email sent to:', email);
+    console.log('Email response:', info.response);
   } catch (error) {
     console.error('Error sending verification email:', error);
   }
 };
+
 
 
 
