@@ -179,25 +179,35 @@ app.get('/api/verify-email', async (req, res) => {
   const { token } = req.query;
 
   if (!token) {
+    console.log('Token not provided');
     return res.status(400).json({ message: 'No token provided' });
   }
 
   try {
+    // Decode the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Decoded token:', decoded); // Log decoded token
+
     const userId = decoded.userId;
 
+    // Find the user
     const user = await User.findById(userId);
     if (!user) {
+      console.log('User not found for ID:', userId);
       return res.status(400).json({ message: 'Invalid token' });
     }
 
+    // Check if the user is already verified
     if (user.verified) {
+      console.log('User already verified:', userId);
       return res.status(400).json({ message: 'User already verified' });
     }
 
+    // Verify the user
     user.verified = true;
     await user.save();
 
+    console.log('User successfully verified:', userId);
     res.status(200).json({ message: 'User verified successfully' });
   } catch (error) {
     console.error('Error verifying token:', error);
