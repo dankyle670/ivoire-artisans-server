@@ -131,6 +131,7 @@ app.post('/api/users', async (req, res) => {
     await newUser.save();
 
     const token = createVerificationToken(newUser._id);
+    console.log('THE TOKEN:', token);
     await sendVerificationEmail(email, token);
 
     res.status(201).json({ message: 'User created successfully. Please check your email to verify your account.' });
