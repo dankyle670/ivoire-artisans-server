@@ -1,37 +1,3 @@
-//const nodemailer = require('nodemailer');
-//require('dotenv').config();
-//
-//const OUTLOOK_USER = process.env.OUTLOOK_USER;
-//const OUTLOOK_PASS = process.env.OUTLOOK_PASS;
-//
-//console.log('OUTLOOK_USER:', OUTLOOK_USER);
-//console.log('OUTLOOK_PASS:', OUTLOOK_PASS ? 'Password is set' : 'Password is not set');
-//
-//const transporter = nodemailer.createTransport({
-//  service: 'hotmail',
-//  auth: {
-//    user: OUTLOOK_USER,
-//    pass: OUTLOOK_PASS
-//  }
-//});
-//
-//const mailOptions = {
-//  from: OUTLOOK_USER,
-//  to: 'daniel.komoe78@gmail.com, jdanielkom@gmail.com', // Can be a list of recipients
-//  subject: 'Subject of the email',
-//  text: 'Plaintext content of the email',
-//  html: '<b>HTML content of the email</b>'
-//};
-//
-//transporter.sendMail(mailOptions, (error, info) => {
-//  if (error) {
-//    return console.log('Error occurred:', error);
-//  }
-//  console.log('Message sent:', info.messageId);
-//});
-
-/////////////////////////////////////////////////////////////////////////:
-
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -84,10 +50,10 @@ const createVerificationToken = (userId) => {
 
 // Configure Nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'hotmail',
+  service: 'gmail',
   auth: {
-    user: process.env.OUTLOOK_USER,
-    pass: process.env.OUTLOOK_PASS,
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
   },
 });
 
@@ -97,7 +63,7 @@ const sendVerificationEmail = async (email, token) => {
   console.log('Generated verification URL:', verificationUrl);
 
   const mailOptions = {
-    from: process.env.OUTLOOK_USER,
+    from: process.env.GMAIL_USER,
     to: email,
     subject: 'Verify your email',
     html: `
@@ -119,22 +85,6 @@ const sendVerificationEmail = async (email, token) => {
     console.error('Error sending verification email:', error);
   }
 };
-
-
-
-
-
-//const sendVerificationEmail = (email,   token) => {
-//    const verificationUrl = `ivoireartisans://verify/email?token=${token}`;
-//    const mailOptions = {
-//      from: process.env.OUTLOOK_USER,
-//      to: email,
-//      subject: 'Verify your email',
-//      html: `<p>Please verify your email by clicking on the following link: <a href="${verificationUrl}">Verify Email</a></p>`,
-//    };
-//
-//    return transporter.sendMail(mailOptions);
-//  };
 
 // Routes
 
