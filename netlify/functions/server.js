@@ -122,6 +122,40 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
+//handling login
+
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Vérifier si l'utilisateur existe
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    // Vérifier le mot de passe
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Vérifier si l'utilisateur est confirmé
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Account not verified' });
+    }
+
+    // Créer un token JWT si l'utilisateur est vérifié
+    const token = jwt.sign({ id: user._id }, 'votre_secret_jwt', { expiresIn: '1h' });
+
+    // Réponse si l'utilisateur est confirmé
+    res.json({ message: 'Login successful', token, verified: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // end users route
 
 // verifyroute mail
