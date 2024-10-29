@@ -141,7 +141,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Vérifier si l'utilisateur est confirmé
-    if (!user.Verified) {
+    if (!user.verified) {
       return res.status(403).json({ message: 'Account not verified' });
     }
 
