@@ -40,6 +40,8 @@ const UserSchema = new mongoose.Schema({
     verified: { type: Boolean, default: false },
     isFirstLogin: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
+    isArtisan: { type: Boolean, default: false },
+    isClient: { type: Boolean, default: false },
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -120,6 +122,39 @@ app.post('/api/users', async (req, res) => {
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ message: 'Error creating user', error: error.message });
+  }
+});
+
+// handling uupdate of role
+app.post('/api/updateRole', async (req, res) => {
+  const { userId, role } = req.body; // userId sera passé depuis le frontend
+
+  try {
+    // Trouver l'utilisateur par son ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Mettre à jour les champs isArtisan et isClient en fonction du rôle choisi
+    if (role === 'artisan') {
+      user.isArtisan = true;
+      user.isClient = false;
+    } else if (role === 'client') {
+      user.isArtisan = false;
+      user.isClient = true;
+    } else {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    // Sauvegarder les modifications
+    await user.save();
+
+    // Réponse réussie
+    res.json({ message: 'User role updated successfully' });
+  } catch (error) {
+    console.error('Error updating role:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
