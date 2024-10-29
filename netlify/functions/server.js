@@ -141,12 +141,12 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Vérifier si l'utilisateur est confirmé
-    if (!user.isVerified) {
+    if (!user.Verified) {
       return res.status(403).json({ message: 'Account not verified' });
     }
 
     // Créer un token JWT si l'utilisateur est vérifié
-    const token = jwt.sign({ id: user._id }, 'votre_secret_jwt', { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     // Réponse si l'utilisateur est confirmé
     res.json({ message: 'Login successful', token, verified: true });
