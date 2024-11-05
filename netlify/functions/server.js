@@ -180,17 +180,26 @@ app.post('/api/login', async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const isFirstLogin = user.isFirstLogin;
+
+    // Met à jour le statut de première connexion s'il s'agit de la première
     if (isFirstLogin) {
       user.isFirstLogin = false;
       await user.save();
     }
-    res.json({ message: 'Login successful', token, verified: true, isFirstLogin });
+
+    // Renvoie userId pour permettre au frontend d'y accéder
+    res.json({
+      message: 'Login successful',
+      token,
+      verified: true,
+      isFirstLogin,
+      userId: user._id // Ajout de userId ici
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 // end users route
 
