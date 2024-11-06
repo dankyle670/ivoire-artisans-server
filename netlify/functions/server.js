@@ -44,6 +44,7 @@ const UserSchema = new mongoose.Schema({
     isClient: { type: Boolean, default: false },
     countryCode: { type: String, required: false },
     phoneNumber: { type: String, required: false },
+    artisanType: { type: String, required: false },
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -128,26 +129,30 @@ app.post('/api/users', async (req, res) => {
 });
 
 // In your backend code
-app.post('/api/savePhoneNumber', async (req, res) => {
-  const { userId, countryCode, phoneNumber } = req.body;
+app.post('/api/saveInfos', async (req, res) => {
+  const { userId, countryCode, phoneNumber, artisanType } = req.body; // Add artisanType to the request body
 
   try {
+    // Fetch the user from the database
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Update user info: countryCode, phoneNumber, and artisanType
     user.countryCode = countryCode;
     user.phoneNumber = phoneNumber;
-    await user.save();
+    if (artisanType) {
+      user.artisanType = artisanType; // Save artisan type
+    }
+    await user.save(); // Save the updated user document
 
-    res.json({ message: 'Phone number saved successfully' });
+    res.json({ message: 'Phone number and artisan info saved successfully' });
   } catch (error) {
-    console.error('Error saving phone number:', error);
+    console.error('Error saving phone number and artisan info:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 // handling uupdate of role
 app.post('/api/updateRole', async (req, res) => {
