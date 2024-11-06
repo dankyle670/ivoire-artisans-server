@@ -130,26 +130,33 @@ app.post('/api/users', async (req, res) => {
 
 // In your backend code
 app.post('/api/saveInfos', async (req, res) => {
-  const { userId, countryCode, phoneNumber, artisanType } = req.body; // Add artisanType to the request body
+  const { userId, countryCode, phoneNumber, artisanType } = req.body;
+
+  // Log the incoming request data to debug
+  console.log('Request Body:', req.body);
 
   try {
     // Fetch the user from the database
     const user = await User.findById(userId);
     if (!user) {
+      console.error('User not found:', userId);  // Log if the user is not found
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update user info: countryCode, phoneNumber, and artisanType
+    // Update user info
     user.countryCode = countryCode;
     user.phoneNumber = phoneNumber;
     if (artisanType) {
-      user.artisanType = artisanType; // Save artisan type
+      user.artisanType = artisanType; // Save artisan type if provided
     }
-    await user.save(); // Save the updated user document
+
+    // Save the updated user document
+    await user.save();
+    console.log('User information updated successfully:', user);  // Log the updated user
 
     res.json({ message: 'Phone number and artisan info saved successfully' });
   } catch (error) {
-    console.error('Error saving phone number and artisan info:', error);
+    console.error('Error saving phone number and artisan info:', error);  // Log the error details
     res.status(500).json({ message: 'Server error' });
   }
 });
