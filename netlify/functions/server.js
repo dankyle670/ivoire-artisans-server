@@ -158,8 +158,6 @@ app.post('/api/updateRole', async (req, res) => {
   }
 });
 
-//handling login
-
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -181,25 +179,28 @@ app.post('/api/login', async (req, res) => {
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const isFirstLogin = user.isFirstLogin;
 
-    // Met à jour le statut de première connexion s'il s'agit de la première
+    // Update the first login status if it's the first login
     if (isFirstLogin) {
       user.isFirstLogin = false;
       await user.save();
     }
 
-    // Renvoie userId pour permettre au frontend d'y accéder
+    // Include user roles in the response
     res.json({
       message: 'Login successful',
       token,
       verified: true,
       isFirstLogin,
-      userId: user._id // Ajout de userId ici
+      userId: user._id,
+      isArtisan: user.isArtisan || false, // Default to false if undefined
+      isClient: user.isClient || false    // Default to false if undefined
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // end users route
 
