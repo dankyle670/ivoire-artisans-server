@@ -42,6 +42,8 @@ const UserSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
     isArtisan: { type: Boolean, default: false },
     isClient: { type: Boolean, default: false },
+    countryCode: { type: String, required: false },
+    phoneNumber: { type: String, required: false },
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -125,18 +127,38 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-// handling uupdate of role
-app.post('/api/updateRole', async (req, res) => {
-  const { userId, role } = req.body; // userId sera passé depuis le frontend
+// In your backend code
+app.post('/api/savePhoneNumber', async (req, res) => {
+  const { userId, countryCode, phoneNumber } = req.body;
 
   try {
-    // Trouver l'utilisateur par son ID
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Mettre à jour les champs isArtisan et isClient en fonction du rôle choisi
+    user.countryCode = countryCode;
+    user.phoneNumber = phoneNumber;
+    await user.save();
+
+    res.json({ message: 'Phone number saved successfully' });
+  } catch (error) {
+    console.error('Error saving phone number:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+// handling uupdate of role
+app.post('/api/updateRole', async (req, res) => {
+  const { userId, role } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     if (role === 'artisan') {
       user.isArtisan = true;
       user.isClient = false;
@@ -192,8 +214,8 @@ app.post('/api/login', async (req, res) => {
       verified: true,
       isFirstLogin,
       userId: user._id,
-      isArtisan: user.isArtisan || false, // Default to false if undefined
-      isClient: user.isClient || false    // Default to false if undefined
+      isArtisan: user.isArtisan || false,
+      isClient: user.isClient || false
     });
   } catch (error) {
     console.error(error);
