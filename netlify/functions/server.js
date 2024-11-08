@@ -245,25 +245,32 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/logout', async (req, res) => {
   const { userToken } = req.body;
 
+  if (!userToken) {
+    return res.status(400).send({ message: 'No token provided' });
+  }
+
   try {
     const decoded = jwt.decode(userToken);
+    console.log('Decoded token:', decoded); // Debugging log
 
-    if (decoded && decoded.userId) {
-      const user = await User.findById(decoded.userId);
-
+    if (decoded && decoded.id) {
+      const user = await User.findById(decoded.id);
       if (user) {
         user.isLoggedIn = false;
         await user.save();
+        return res.status(200).send({ message: 'Logged out successfully' });
+      } else {
+        return res.status(404).send({ message: 'User not found' });
       }
-
-      res.status(200).send({ message: 'Logged out successfully' });
     } else {
-      res.status(400).send({ message: 'Invalid token' });
+      return res.status(400).send({ message: 'Invalid token' });
     }
   } catch (error) {
-    res.status(500).send({ message: 'An error occurred during logout' });
+    console.error('Logout error:', error); // Debugging log
+    return res.status(500).send({ message: 'An error occurred during logout' });
   }
 });
+
 
 // end users route
 
