@@ -45,7 +45,7 @@ const UserSchema = new mongoose.Schema({
     countryCode: { type: String, required: false },
     phoneNumber: { type: String, required: false },
     artisanType: { type: String, required: false },
-    status: { type: Boolean, default: false },
+    isLoggedIn: { type: Boolean, default: false },
 
 });
 
@@ -220,7 +220,7 @@ app.post('/api/login', async (req, res) => {
 
     if (isFirstLogin) {
       user.isFirstLogin = false;
-      user.status = true;
+      user.isLoggedIn = true;
       await user.save();
     }
 
@@ -232,7 +232,7 @@ app.post('/api/login', async (req, res) => {
       userId: user._id,
       isArtisan: user.isArtisan || false,
       isClient: user.isClient || false,
-      status: user.status || false
+      isLoggedIn: user.isLoggedIn || false
     });
   } catch (error) {
     console.error(error);
@@ -240,6 +240,30 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// handling logout 
+
+app.post('/api/logout', async (req, res) => {
+  const { userToken } = req.body;
+
+  try {
+    const decoded = jwt.decode(userToken);
+
+    if (decoded && decoded.userId) {
+      const user = await User.findById(decoded.userId);
+
+      if (user) {
+        user.isLoggedIn = false;
+        await user.save();
+      }
+
+      res.status(200).send({ message: 'Logged out successfully' });
+    } else {
+      res.status(400).send({ message: 'Invalid token' });
+    }
+  } catch (error) {
+    res.status(500).send({ message: 'An error occurred during logout' });
+  }
+});
 
 // end users route
 
