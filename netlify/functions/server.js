@@ -218,11 +218,14 @@ app.post('/api/login', async (req, res) => {
 
     const isFirstLogin = user.isFirstLogin;
 
+    // Update `isLoggedIn` to true for both first time and subsequent logins
+    user.isLoggedIn = true;
+
     if (isFirstLogin) {
-      user.isFirstLogin = false;
-      user.isLoggedIn = true;
-      await user.save();
+      user.isFirstLogin = false;  // Mark the user as no longer a first-time login
     }
+
+    await user.save();  // Save the user with updated state
 
     res.json({
       message: 'Login successful',
@@ -232,13 +235,14 @@ app.post('/api/login', async (req, res) => {
       userId: user._id,
       isArtisan: user.isArtisan || false,
       isClient: user.isClient || false,
-      isLoggedIn: user.isLoggedIn || false
+      isLoggedIn: user.isLoggedIn  // Ensure we return the updated state
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // handling logout 
 
