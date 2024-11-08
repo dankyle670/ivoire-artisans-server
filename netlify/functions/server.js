@@ -45,6 +45,8 @@ const UserSchema = new mongoose.Schema({
     countryCode: { type: String, required: false },
     phoneNumber: { type: String, required: false },
     artisanType: { type: String, required: false },
+    status: { type: Boolean, default: false },
+
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -192,6 +194,8 @@ app.post('/api/updateRole', async (req, res) => {
   }
 });
 
+//handling login
+
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -211,23 +215,24 @@ app.post('/api/login', async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
     const isFirstLogin = user.isFirstLogin;
 
-    // Update the first login status if it's the first login
     if (isFirstLogin) {
       user.isFirstLogin = false;
+      user.status = true;
       await user.save();
     }
 
-    // Include user roles in the response
     res.json({
       message: 'Login successful',
       token,
-      verified: true,
+      verified: user.verified,
       isFirstLogin,
       userId: user._id,
       isArtisan: user.isArtisan || false,
-      isClient: user.isClient || false
+      isClient: user.isClient || false,
+      status: user.status || false
     });
   } catch (error) {
     console.error(error);
