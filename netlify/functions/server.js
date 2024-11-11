@@ -57,6 +57,9 @@ const messageSchema = new mongoose.Schema({
   receiverRole: { type: String, required: true, enum: ['users'] },
   message: { type: String, required: true },
   sentAt: { type: Date, default: Date.now },
+
+  receiverId: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+  readStatus: {type: Boolean, default: false},
 });
 
 const Message = mongoose.model('Message', messageSchema);
@@ -111,20 +114,25 @@ const sendVerificationEmail = async (email, token) => {
 
 // Route to fetch unread message count for a user
 app.get('/api/unreadMessages', async (req, res) => {
-  const userId = req.query.userId;  // Get userId from query parameters
+  const { receiverId } = req.query;
 
-  if (!userId) {
-    return res.status(400).json({ message: 'User ID is required' });
+  if (!receiverId) {
+    return res.status(400).json({ message: 'Receiver ID is required' });
   }
 
   try {
-    // Fetch the unread messages count for the given user
-    const unreadMessagesCount = await Message.countDocuments({ receiver: userId, readStatus: false });
+    // Get the unread message count for the artisan
+    const unreadMessagesCount = await Message.countDocuments({
+      receiverId,
+      readStatus: false,
+    });
+
     res.json({ unreadMessagesCount });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching unread messages', error });
   }
 });
+
 
 // Route to mark messages as read for a user
 app.post('/api/markMessagesAsRead', async (req, res) => {
