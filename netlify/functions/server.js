@@ -109,6 +109,41 @@ const sendVerificationEmail = async (email, token) => {
 
 // Routes
 
+// Route to fetch unread message count for a user
+app.get('/api/unreadMessages', async (req, res) => {
+  const userId = req.query.userId;  // Get userId from query parameters
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    // Fetch the unread messages count for the given user
+    const unreadMessagesCount = await Message.countDocuments({ receiver: userId, readStatus: false });
+    res.json({ unreadMessagesCount });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching unread messages', error });
+  }
+});
+
+// Route to mark messages as read for a user
+app.post('/api/markMessagesAsRead', async (req, res) => {
+  const { userId } = req.body;  // Get userId from request body
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    // Mark all messages as read for the given user
+    await Message.updateMany({ receiver: userId, readStatus: false }, { $set: { readStatus: true } });
+    res.json({ message: 'Messages marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking messages as read', error });
+  }
+});
+
+
 // users route
 app.get('/api/user', async (req, res) => {
   const userId = req.query.userId;  // Get user ID from the request query
