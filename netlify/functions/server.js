@@ -136,7 +136,7 @@ app.get('/api/user', async (req, res) => {
 });
 
 app.put('/api/user', async (req, res) => {
-  const { userId, firstName, lastName, email, profilePicture } = req.body;
+  const { userId, firstName, lastName, email } = req.body;
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
@@ -148,10 +148,10 @@ app.put('/api/user', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Update the user fields
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-    user.email = email || user.email;
+    // Only update firstName, lastName, and email
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (email !== undefined) user.email = email;
 
     // Save the updated user data
     await user.save();
