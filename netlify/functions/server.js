@@ -34,7 +34,8 @@ mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
 
 // Define schema and model
 const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
@@ -108,7 +109,7 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   const saltRounds = 10;
-  const { name, email, password } = req.body;
+  const { firstName, lastName, email, password } = req.body; // Updated to include firstName and lastName
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -116,7 +117,7 @@ app.post('/api/users', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    const newUser = new User({ name, email, password: hashedPassword });
+    const newUser = new User({ firstName, lastName, email, password: hashedPassword }); // Updated here
     await newUser.save();
 
     const token = createVerificationToken(newUser._id);
@@ -129,6 +130,7 @@ app.post('/api/users', async (req, res) => {
     res.status(500).json({ message: 'Error creating user', error: error.message });
   }
 });
+
 
 // In your backend code
 app.post('/api/saveInfos', async (req, res) => {
