@@ -49,6 +49,7 @@ const UserSchema = new mongoose.Schema({
     isLoggedIn: { type: Boolean, default: false },
     subscription: { type: String, default: 'basic' },
     profilePicture: { type: String, required: false },
+    role: { type: String, enum: ['admin', 'user'], default: 'user' },
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -208,26 +209,36 @@ app.post('/api/saveInfos', async (req, res) => {
 });
 
 // handling uupdate of role
+
 app.post('/api/updateRole', async (req, res) => {
   const { userId, role } = req.body;
 
   try {
+    // Trouver l'utilisateur par son ID
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (role === 'artisan') {
-      user.isArtisan = true;
-      user.isClient = false;
-    } else if (role === 'client') {
-      user.isArtisan = false;
-      user.isClient = true;
-    } else {
+    // Vérifier si le rôle est valide (admin ou user)
+    if (role !== 'admin' && role !== 'user') {
       return res.status(400).json({ message: 'Invalid role' });
     }
 
-    // Sauvegarder les modifications
+    // Mise à jour du rôle
+    user.role = role;
+
+    // Si l'utilisateur devient artisan ou client, mettre à jour les champs correspondants
+    if (role === 'user') {
+      user.isArtisan = true; // Pour un artisan
+      user.isClient = true;  // Pour un client
+    } else if (role === 'admin') {
+      // Aucune modification de isArtisan ou isClient, car admin est un rôle à part
+      user.isArtisan = false;
+      user.isClient = false;
+    }
+
+    // Sauvegarder les modifications dans la base de données
     await user.save();
 
     // Réponse réussie
@@ -237,6 +248,36 @@ app.post('/api/updateRole', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+//app.post('/api/updateRole', async (req, res) => {
+//  const { userId, role } = req.body;
+//
+//  try {
+//    const user = await User.findById(userId);
+//    if (!user) {
+//      return res.status(404).json({ message: 'User not found' });
+//    }
+//
+//    if (role === 'artisan') {
+//      user.isArtisan = true;
+//      user.isClient = false;
+//    } else if (role === 'client') {
+//      user.isArtisan = false;
+//      user.isClient = true;
+//    } else {
+//      return res.status(400).json({ message: 'Invalid role' });
+//    }
+//
+//    // Sauvegarder les modifications
+//    await user.save();
+//
+//    // Réponse réussie
+//    res.json({ message: 'User role updated successfully' });
+//  } catch (error) {
+//    console.error('Error updating role:', error);
+//    res.status(500).json({ message: 'Server error' });
+//  }
+//});
 
 //handling login
 
@@ -288,7 +329,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 
-// handling logout 
+// handling logout
 
 app.post('/api/logout', async (req, res) => {
   const { userToken } = req.body;
