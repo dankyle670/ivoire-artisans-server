@@ -52,6 +52,16 @@ mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
       role: { type: String, default: 'users' },
   });
 
+const messageSchema = new mongoose.Schema({
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  receiverRole: { type: String, required: true, enum: ['users'] }, // All messages go to users
+  message: { type: String, required: true },
+  sentAt: { type: Date, default: Date.now },
+});
+
+const Message = mongoose.model('Message', messageSchema);
+
+
 const User = mongoose.model('User', UserSchema);
 
 // Generate verification token
@@ -261,6 +271,77 @@ app.get('/api/getRole', async (req, res) => {
   } catch (error) {
     console.error('Error fetching user role:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+//hanling sending of messages
+app.post('/api/sendMessage', async (req, res) => {
+  const { userId, message } = req.body;
+
+  if (!userId || !message) {
+    return res.status(400).json({ message: 'User ID and message content are required' });
+  }
+
+  try {
+    // Fetch the user from the database to check the role
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the user is an admin
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can send messages' });
+    }
+
+    // Save the message with the receiver as a user (role: users)
+    const newMessage = new Message({
+      senderId: userId,
+      receiverRole: 'users', // Always targeting users as receivers
+      message,
+      sentAt: new Date(),
+    });
+
+    await newMessage.save();
+
+    res.status(200).json({ message: 'Message sent successfully' });
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).json({ message: 'Error sending message', error: error.message });
+  }
+});
+
+// handling msg recived
+app.get('/api/getMessages', async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    // Fetch the user from the database
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if the user is a regular user (not admin)
+    if (user.role !== 'users') {
+      return res.status(403).json({ message: 'Only users can receive messages' });
+    }
+
+    // Fetch messages that were sent to users
+    const messages = await Message.find({ receiverRole: 'users' });
+
+    if (messages.length === 0) {
+      return res.status(200).json({ message: 'No new messages' });
+    }
+
+    res.status(200).json({ messages });
+  } catch (error) {
+    console.error('Error getting messages:', error);
+    res.status(500).json({ message: 'Error retrieving messages', error: error.message });
   }
 });
 
