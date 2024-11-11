@@ -54,7 +54,7 @@ mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
 
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  receiverRole: { type: String, required: true, enum: ['users'] }, // All messages go to users
+  receiverRole: { type: String, required: true, enum: ['users'] },
   message: { type: String, required: true },
   sentAt: { type: Date, default: Date.now },
 });
@@ -110,30 +110,33 @@ const sendVerificationEmail = async (email, token) => {
 // Routes
 
 // users route
-app.get('/api/user', async (req, res) => {
-  const userId = req.query.userId;  // Get user ID from the request query
+app.put('/api/user', async (req, res) => {
+  const { userId, firstName, lastName, email } = req.body;
+
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
   }
 
   try {
-    const user = await User.findById(userId);  // No need for populate if there's no transactions field
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      subscription: user.subscription,
-      _id: user._id,
-      profilePicture: user.profilePicture,
-    });
+    // Only update firstName, lastName, and email
+    if (firstName !== undefined) user.firstName = firstName;
+    if (lastName !== undefined) user.lastName = lastName;
+    if (email !== undefined) user.email = email;
+
+    // Save the updated user data
+    await user.save();
+
+    res.json({ message: 'User updated successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching user data', error });
+    res.status(500).json({ message: 'Error updating user data', error });
   }
 });
+
 
 
 app.post('/api/users', async (req, res) => {
