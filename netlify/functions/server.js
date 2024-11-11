@@ -282,6 +282,7 @@ app.post('/api/login', async (req, res) => {
       userId: user._id,
       isArtisan: user.isArtisan || false,
       isClient: user.isClient || false,
+      role: user.role,
       isLoggedIn: user.isLoggedIn  // Ensure we return the updated state
     });
   } catch (error) {
