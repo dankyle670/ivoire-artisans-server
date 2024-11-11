@@ -214,40 +214,36 @@ app.post('/api/updateRole', async (req, res) => {
   const { userId, role } = req.body;
 
   try {
-    // Trouver l'utilisateur par son ID
+    // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Vérifier si le rôle est valide (admin ou user)
-    if (role !== 'admin' && role !== 'user') {
+    // Validate the role ('admin' or 'user')
+    if (role === 'user') {
+      // Set isArtisan and isClient based on role (user as artisan or client)
+      user.isArtisan = true; // or false based on specific business logic
+      user.isClient = true;  // or false based on specific business logic
+    } else if (role === 'admin') {
+      // Admin role, both isArtisan and isClient are false
+      user.isArtisan = false;
+      user.isClient = false;
+    } else {
       return res.status(400).json({ message: 'Invalid role' });
     }
 
-    // Mise à jour du rôle
-    user.role = role;
-
-    // Si l'utilisateur devient artisan ou client, mettre à jour les champs correspondants
-    if (role === 'user') {
-      user.isArtisan = true; // Pour un artisan
-      user.isClient = true;  // Pour un client
-    } else if (role === 'admin') {
-      // Aucune modification de isArtisan ou isClient, car admin est un rôle à part
-      user.isArtisan = false;
-      user.isClient = false;
-    }
-
-    // Sauvegarder les modifications dans la base de données
+    // Save the updated user document
+    user.role = role; // Update the role field
     await user.save();
 
-    // Réponse réussie
     res.json({ message: 'User role updated successfully' });
   } catch (error) {
     console.error('Error updating role:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 //app.post('/api/updateRole', async (req, res) => {
 //  const { userId, role } = req.body;
