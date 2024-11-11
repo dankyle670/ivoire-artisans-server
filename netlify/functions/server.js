@@ -49,7 +49,6 @@ const UserSchema = new mongoose.Schema({
     isLoggedIn: { type: Boolean, default: false },
     subscription: { type: String, default: 'basic' },
     profilePicture: { type: String, required: false },
-
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -100,13 +99,18 @@ const sendVerificationEmail = async (email, token) => {
 // Routes
 
 // users route
-app.get('/api/user', async (req, res) => {  // Use /user for a specific user
-  const userId = req.query.userId;  // Get user ID from the request
+app.get('/api/user', async (req, res) => {
+  const userId = req.query.userId;  // Get user ID from the request query
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
   try {
-    const user = await User.findById(userId).populate('transactions');  // Populate with transactions
+    const user = await User.findById(userId);  // No need for populate if there's no transactions field
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     res.json({
       firstName: user.firstName,
       lastName: user.lastName,
