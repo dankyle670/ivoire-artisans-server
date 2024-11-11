@@ -32,25 +32,25 @@ mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
     console.error('Error details:', JSON.stringify(err, null, 2));
 });
 
-// Define schema and model
-const UserSchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    verified: { type: Boolean, default: false },
-    isFirstLogin: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    isArtisan: { type: Boolean, default: false },
-    isClient: { type: Boolean, default: false },
-    countryCode: { type: String, required: false },
-    phoneNumber: { type: String, required: false },
-    artisanType: { type: String, required: false },
-    isLoggedIn: { type: Boolean, default: false },
-    subscription: { type: String, default: 'basic' },
-    profilePicture: { type: String, required: false },
-    role: { type: String, enum: ['admin', 'user'], default: 'user' },
-});
+  // Define schema and model
+  const UserSchema = new mongoose.Schema({
+      firstName: { type: String, required: true },
+      lastName: { type: String, required: true },
+      email: { type: String, required: true, unique: true },
+      password: { type: String, required: true },
+      verified: { type: Boolean, default: false },
+      isFirstLogin: { type: Boolean, default: true },
+      createdAt: { type: Date, default: Date.now },
+      isArtisan: { type: Boolean, default: false },
+      isClient: { type: Boolean, default: false },
+      countryCode: { type: String, required: false },
+      phoneNumber: { type: String, required: false },
+      artisanType: { type: String, required: false },
+      isLoggedIn: { type: Boolean, default: false },
+      subscription: { type: String, default: 'basic' },
+      profilePicture: { type: String, required: false },
+      role: { type: String, default: 'users' },
+  });
 
 const User = mongoose.model('User', UserSchema);
 
@@ -211,8 +211,8 @@ app.post('/api/saveInfos', async (req, res) => {
 // handling uupdate of role
 
 app.post('/api/updateRole', async (req, res) => {
-  const { userId, role } = req.body;
 
+  const { userId, role } = req.body;
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -221,11 +221,9 @@ app.post('/api/updateRole', async (req, res) => {
     if (role === 'artisan') {
       user.isArtisan = true;
       user.isClient = false;
-      user.role ='users';
     } else if (role === 'client') {
       user.isArtisan = false;
       user.isClient = true;
-      user.role ='users';
     } else {
       return res.status(400).json({ message: 'Invalid role' });
     }
