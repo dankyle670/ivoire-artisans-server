@@ -214,66 +214,32 @@ app.post('/api/updateRole', async (req, res) => {
   const { userId, role } = req.body;
 
   try {
-    // Find the user by ID
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    // Validate the role ('admin' or 'user')
-    if (role === 'user') {
-      // Set isArtisan and isClient based on role (user as artisan or client)
-      user.isArtisan = true; // or false based on specific business logic
-      user.isClient = true;  // or false based on specific business logic
-    } else if (role === 'admin') {
-      // Admin role, both isArtisan and isClient are false
-      user.isArtisan = false;
+    if (role === 'artisan') {
+      user.isArtisan = true;
       user.isClient = false;
+      user.role ='users';
+    } else if (role === 'client') {
+      user.isArtisan = false;
+      user.isClient = true;
+      user.role ='users';
     } else {
       return res.status(400).json({ message: 'Invalid role' });
     }
 
-    // Save the updated user document
-    user.role = role; // Update the role field
+    // Sauvegarder les modifications
     await user.save();
 
+    // Réponse réussie
     res.json({ message: 'User role updated successfully' });
   } catch (error) {
     console.error('Error updating role:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-
-//app.post('/api/updateRole', async (req, res) => {
-//  const { userId, role } = req.body;
-//
-//  try {
-//    const user = await User.findById(userId);
-//    if (!user) {
-//      return res.status(404).json({ message: 'User not found' });
-//    }
-//
-//    if (role === 'artisan') {
-//      user.isArtisan = true;
-//      user.isClient = false;
-//    } else if (role === 'client') {
-//      user.isArtisan = false;
-//      user.isClient = true;
-//    } else {
-//      return res.status(400).json({ message: 'Invalid role' });
-//    }
-//
-//    // Sauvegarder les modifications
-//    await user.save();
-//
-//    // Réponse réussie
-//    res.json({ message: 'User role updated successfully' });
-//  } catch (error) {
-//    console.error('Error updating role:', error);
-//    res.status(500).json({ message: 'Server error' });
-//  }
-//});
 
 //handling login
 
