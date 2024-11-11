@@ -47,6 +47,8 @@ const UserSchema = new mongoose.Schema({
     phoneNumber: { type: String, required: false },
     artisanType: { type: String, required: false },
     isLoggedIn: { type: Boolean, default: false },
+    subscription: { type: String, default: 'basic' },
+    profilePicture: { type: String, required: false },
 
 });
 
@@ -98,14 +100,26 @@ const sendVerificationEmail = async (email, token) => {
 // Routes
 
 // users route
-app.get('/api/users', async (req, res) => {
+app.get('/api/user', async (req, res) => {  // Use /user for a specific user
+  const userId = req.query.userId;  // Get user ID from the request
   try {
-    const users = await User.find({});
-    res.json(users);
+    const user = await User.findById(userId).populate('transactions');  // Populate with transactions
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      subscription: user.subscription,
+      _id: user._id,
+      profilePicture: user.profilePicture,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching users', error });
+    res.status(500).json({ message: 'Error fetching user data', error });
   }
 });
+
 
 app.post('/api/users', async (req, res) => {
   const saltRounds = 10;
@@ -128,6 +142,30 @@ app.post('/api/users', async (req, res) => {
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ message: 'Error creating user', error: error.message });
+  }
+});
+
+// Handling user subscription
+
+app.post('/api/subscribe', async (req, res) => {
+  const { userId, subscription } = req.body;
+  try {
+    // Find user by ID and update subscription field
+    const user = await User.findByIdAndUpdate(userId, { subscription }, { new: true });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    // Respond with success message and updated subscription
+    res.status(200).json({
+      message: 'Subscription updated successfully',
+      subscription: user.subscription,
+    });
+  } catch (error) {
+    console.error('Error updating subscription:', error);
+    res.status(500).json({
+      message: 'Error updating subscription',
+      error: error.message,
+    });
   }
 });
 
