@@ -326,19 +326,34 @@ app.get('/api/getMessages', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Check if the user is a regular user (not admin)
-    if (user.role !== 'users') {
-      return res.status(403).json({ message: 'Only users can receive messages' });
+    // For regular users (role: 'users'), show only messages sent to them
+    if (user.role === 'users') {
+      const messages = await Message.find({ receiverRole: 'users' });
+
+      if (messages.length === 0) {
+        return res.status(200).json({ message: 'No new messages' });
+      }
+
+      res.status(200).json({ messages });
     }
 
-    // Fetch messages that were sent to users
-    const messages = await Message.find({ receiverRole: 'users' });
+    // For the admin (role: 'admin'), show both messages sent to users and messages they have sent
+    if (user.role === 'admin') {
+      // Fetch all messages sent to users
+      const messagesForUsers = await Message.find({ receiverRole: 'users' });
 
-    if (messages.length === 0) {
-      return res.status(200).json({ message: 'No new messages' });
+      // Fetch all messages the admin has sent
+      const messagesByAdmin = await Message.find({ senderId: userId });
+
+      // Combine the messages
+      const allMessages = [...messagesForUsers, ...messagesByAdmin];
+
+      if (allMessages.length === 0) {
+        return res.status(200).json({ message: 'No new messages' });
+      }
+
+      res.status(200).json({ messages: allMessages });
     }
-
-    res.status(200).json({ messages });
   } catch (error) {
     console.error('Error getting messages:', error);
     res.status(500).json({ message: 'Error retrieving messages', error: error.message });
