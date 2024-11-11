@@ -152,7 +152,6 @@ app.put('/api/user', async (req, res) => {
     user.firstName = firstName || user.firstName;
     user.lastName = lastName || user.lastName;
     user.email = email || user.email;
-    user.profilePicture = profilePicture || user.profilePicture;
 
     // Save the updated user data
     await user.save();
