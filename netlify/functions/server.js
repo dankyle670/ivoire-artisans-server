@@ -52,14 +52,12 @@ mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
       role: { type: String, default: 'users' },
   });
 
-  const messageSchema = new mongoose.Schema({
-    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    receiverRole: { type: String, required: true, enum: ['users'] },
-    receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Reference to the artisan
-    message: { type: String, required: true },
-    sentAt: { type: Date, default: Date.now },
-    readStatus: { type: Boolean, default: false },  // Track if the message has been read
-  });
+const messageSchema = new mongoose.Schema({
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  receiverRole: { type: String, required: true, enum: ['users'] },
+  message: { type: String, required: true },
+  sentAt: { type: Date, default: Date.now },
+});
 
 const Message = mongoose.model('Message', messageSchema);
 
@@ -305,10 +303,10 @@ app.get('/api/getRole', async (req, res) => {
 
 //hanling sending of messages
 app.post('/api/sendMessage', async (req, res) => {
-  const { userId, message, receiverId } = req.body;  // Receive receiverId to target specific artisan
+  const { userId, message } = req.body;
 
-  if (!userId || !message || !receiverId) {
-    return res.status(400).json({ message: 'User ID, message content, and receiver ID are required' });
+  if (!userId || !message) {
+    return res.status(400).json({ message: 'User ID and message content are required' });
   }
 
   try {
@@ -323,14 +321,12 @@ app.post('/api/sendMessage', async (req, res) => {
       return res.status(403).json({ message: 'Only admins can send messages' });
     }
 
-    // Save the message with the receiver as an artisan (receiverId)
+    // Save the message with the receiver as a user (role: users)
     const newMessage = new Message({
       senderId: userId,
-      receiverRole: 'users',
-      receiverId: receiverId,  // Assign message to a specific artisan
+      receiverRole: 'users', // Always targeting users as receivers
       message,
       sentAt: new Date(),
-      readStatus: false,  // New messages are unread
     });
 
     await newMessage.save();
@@ -341,25 +337,6 @@ app.post('/api/sendMessage', async (req, res) => {
     res.status(500).json({ message: 'Error sending message', error: error.message });
   }
 });
-
-
-app.get('/api/unreadMessages/:userId', async (req, res) => {
-  const { userId } = req.params;
-
-  try {
-    // Count unread messages for the artisan (receiverId should match artisan's userId)
-    const unreadMessagesCount = await Message.countDocuments({
-      receiverId: userId,
-      readStatus: false,
-    });
-
-    res.status(200).json({ unreadMessagesCount });
-  } catch (error) {
-    console.error('Error fetching unread messages count:', error);
-    res.status(500).json({ message: 'Error fetching unread messages count', error: error.message });
-  }
-});
-
 
 // handling msg recived
 app.get('/api/getMessages', async (req, res) => {
