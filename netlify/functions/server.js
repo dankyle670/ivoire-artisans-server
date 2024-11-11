@@ -239,6 +239,32 @@ app.post('/api/updateRole', async (req, res) => {
   }
 });
 
+//handling get role
+
+app.get('/api/getRole', async (req, res) => {
+  const { userId } = req.query;  // Get userId from query parameter
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    // Retrieve the user from the database
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Return the role, checking if it's 'admin' or 'user'
+    const role = user.role; // Assuming 'role' is either 'admin' or 'users'
+    res.json({ role });
+  } catch (error) {
+    console.error('Error fetching user role:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 //handling login
 
 app.post('/api/login', async (req, res) => {
