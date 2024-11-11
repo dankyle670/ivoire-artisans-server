@@ -110,8 +110,33 @@ const sendVerificationEmail = async (email, token) => {
 // Routes
 
 // users route
+app.get('/api/user', async (req, res) => {
+  const userId = req.query.userId;  // Get user ID from the request query
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const user = await User.findById(userId);  // No need for populate if there's no transactions field
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      subscription: user.subscription,
+      _id: user._id,
+      profilePicture: user.profilePicture,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user data', error });
+  }
+});
+
 app.put('/api/user', async (req, res) => {
-  const { userId, firstName, lastName, email } = req.body;
+  const { userId, firstName, lastName, email, profilePicture } = req.body;
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
@@ -123,10 +148,11 @@ app.put('/api/user', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Only update firstName, lastName, and email
-    if (firstName !== undefined) user.firstName = firstName;
-    if (lastName !== undefined) user.lastName = lastName;
-    if (email !== undefined) user.email = email;
+    // Update the user fields
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.email = email || user.email;
+    user.profilePicture = profilePicture || user.profilePicture;
 
     // Save the updated user data
     await user.save();
@@ -136,7 +162,6 @@ app.put('/api/user', async (req, res) => {
     res.status(500).json({ message: 'Error updating user data', error });
   }
 });
-
 
 
 app.post('/api/users', async (req, res) => {
