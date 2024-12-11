@@ -59,9 +59,26 @@ const messageSchema = new mongoose.Schema({
   sentAt: { type: Date, default: Date.now },
 });
 
+const ProfessionalProfileSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to User
+  bio: { type: String, required: true },
+  hourlyRate: { type: Number, required: true },
+  availability: { type: String, required: true },
+  services: [
+    {
+      name: { type: String, required: true },
+      price: { type: Number, required: true },
+    },
+  ],
+  workPhotos: [{ type: String }], // Array of image URLs
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+const ProfessionalProfile = mongoose.model('ProfessionalProfile', ProfessionalProfileSchema);
+
+
 const Message = mongoose.model('Message', messageSchema);
-
-
 const User = mongoose.model('User', UserSchema);
 
 // Generate verification token
@@ -387,6 +404,48 @@ app.get('/api/getMessages', async (req, res) => {
   }
 });
 
+
+// Create or Update Professional Profile
+app.post('/api/professionalProfile', async (req, res) => {
+  const { userId, bio, hourlyRate, availability, services, workPhotos } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user || !user.isArtisan) {
+      return res.status(404).json({ message: 'User not found or not an artisan' });
+    }
+
+    const artisanType = user.artisanType; // Fetch specialization from UserSchema
+
+    let profile = await ProfessionalProfile.findOne({ userId });
+
+    if (profile) {
+      // Update existing profile
+      profile.bio = bio;
+      profile.hourlyRate = hourlyRate;
+      profile.availability = availability;
+      profile.services = services;
+      profile.workPhotos = workPhotos;
+      profile.updatedAt = Date.now();
+    } else {
+      // Create a new profile
+      profile = new ProfessionalProfile({
+        userId,
+        bio,
+        hourlyRate,
+        availability,
+        services,
+        workPhotos,
+      });
+    }
+
+    await profile.save();
+    res.status(200).json({ message: 'Profile saved successfully', profile, artisanType });
+  } catch (error) {
+    console.error('Error saving profile:', error);
+    res.status(500).json({ message: 'Error saving profile', error });
+  }
+});
 
 //handling login
 
