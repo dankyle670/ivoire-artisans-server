@@ -447,8 +447,6 @@ app.post('/api/professionalProfile', async (req, res) => {
   }
 });
 
-
-
 app.get('/api/professionalProfile/:userId', async (req, res) => {
   const { userId } = req.params;
 
@@ -456,7 +454,6 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
   console.log('Received userId:', userId);
 
   try {
-    // Validate userId format
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       console.error('Invalid userId format:', userId);
       return res.status(400).json({ message: 'Invalid user ID format' });
@@ -465,37 +462,31 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
     const objectId = new mongoose.Types.ObjectId(userId);
     console.log('Converted userId to ObjectId:', objectId);
 
-    // Query for the professional profile
-    const profile = await ProfessionalProfile.findOne({ userId: objectId });
-    console.log('Profile query result:', profile);
-
-    // Query for the user
+    let profile = await ProfessionalProfile.findOne({ userId: objectId });
     const user = await User.findById(objectId);
+
+    console.log('Profile query result:', profile);
     console.log('User query result:', user);
 
     if (!user) {
-      console.warn('No user found for userId:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
 
     if (!profile) {
       console.log('No profile found. Creating a default profile for userId:', userId);
-      const newProfile = new ProfessionalProfile({
+
+      // Provide default values for all required fields
+      profile = new ProfessionalProfile({
         userId: objectId,
-        bio: '',
+        bio: 'Default bio. Please update this section.',
         hourlyRate: 0,
-        availability: '',
+        availability: 'Not specified',
         services: [],
         workPhotos: [],
       });
 
-      await newProfile.save();
-      console.log('Default profile created successfully:', newProfile);
-
-      return res.status(200).json({
-        profile: newProfile,
-        artisanType: user.artisanType,
-      });
+      await profile.save();
+      console.log('Default profile created successfully:', profile);
     }
 
     res.status(200).json({
@@ -513,7 +504,6 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
     });
   }
 });
-
 
 //handling login
 
