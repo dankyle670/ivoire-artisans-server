@@ -447,22 +447,39 @@ app.post('/api/professionalProfile', async (req, res) => {
   }
 });
 
+
 app.get('/api/professionalProfile/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Validate userId
+    // Validate userId format
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: 'Invalid user ID format' });
     }
 
     const objectId = new mongoose.Types.ObjectId(userId);
 
-    const profile = await ProfessionalProfile.findOne({ userId: objectId });
+    // Query the database
+    let profile = await ProfessionalProfile.findOne({ userId: objectId });
     const user = await User.findById(objectId);
 
-    if (!user || !profile) {
-      return res.status(404).json({ message: 'Profile or user not found' });
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Create default profile if not found
+    if (!profile) {
+      console.log('Creating default profile for user:', userId);
+      profile = new ProfessionalProfile({
+        userId: objectId,
+        bio: '',
+        hourlyRate: 0,
+        availability: '',
+        services: [],
+        workPhotos: [],
+      });
+      await profile.save();
     }
 
     res.status(200).json({
@@ -471,10 +488,7 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
-    res.status(500).json({
-      message: 'Error fetching profile',
-      error: error.message || error,
-    });
+    res.status(500).json({ message: 'Error fetching profile', error });
   }
 });
 
