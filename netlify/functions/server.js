@@ -448,30 +448,39 @@ app.post('/api/professionalProfile', async (req, res) => {
 });
 
 
+
 app.get('/api/professionalProfile/:userId', async (req, res) => {
   const { userId } = req.params;
+
+  console.log('--- DEBUG: Incoming Request ---');
+  console.log('Received userId:', userId);
 
   try {
     // Validate userId format
     if (!mongoose.Types.ObjectId.isValid(userId)) {
+      console.error('Invalid userId format:', userId);
       return res.status(400).json({ message: 'Invalid user ID format' });
     }
 
     const objectId = new mongoose.Types.ObjectId(userId);
+    console.log('Converted userId to ObjectId:', objectId);
 
-    // Query the database
-    let profile = await ProfessionalProfile.findOne({ userId: objectId });
+    // Query for the professional profile
+    const profile = await ProfessionalProfile.findOne({ userId: objectId });
+    console.log('Profile query result:', profile);
+
+    // Query for the user
     const user = await User.findById(objectId);
+    console.log('User query result:', user);
 
-    // Check if user exists
     if (!user) {
+      console.warn('No user found for userId:', userId);
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Create default profile if not found
     if (!profile) {
-      console.log('Creating default profile for user:', userId);
-      profile = new ProfessionalProfile({
+      console.log('No profile found. Creating a default profile for userId:', userId);
+      const newProfile = new ProfessionalProfile({
         userId: objectId,
         bio: '',
         hourlyRate: 0,
@@ -479,7 +488,14 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
         services: [],
         workPhotos: [],
       });
-      await profile.save();
+
+      await newProfile.save();
+      console.log('Default profile created successfully:', newProfile);
+
+      return res.status(200).json({
+        profile: newProfile,
+        artisanType: user.artisanType,
+      });
     }
 
     res.status(200).json({
@@ -487,10 +503,17 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
       artisanType: user.artisanType,
     });
   } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ message: 'Error fetching profile', error });
+    console.error('--- ERROR: Fetching Profile ---');
+    console.error('Error message:', error.message);
+    console.error('Stack trace:', error.stack);
+
+    res.status(500).json({
+      message: 'Error fetching profile',
+      error: error.message || error,
+    });
   }
 });
+
 
 //handling login
 
