@@ -451,11 +451,26 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
-    const profile = await ProfessionalProfile.findOne({ userId });
-    const user = await User.findById(userId);
+    const objectId = mongoose.Types.ObjectId(userId); // Convert to ObjectId
 
-    if (!user || !profile) {
-      return res.status(404).json({ message: 'Profile or user not found' });
+    let profile = await ProfessionalProfile.findOne({ userId: objectId });
+    const user = await User.findById(objectId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!profile) {
+      console.log('No profile found. Creating a default profile.');
+      profile = new ProfessionalProfile({
+        userId: objectId,
+        bio: '',
+        hourlyRate: 0,
+        availability: '',
+        services: [],
+        workPhotos: [],
+      });
+      await profile.save();
     }
 
     res.status(200).json({
@@ -467,6 +482,7 @@ app.get('/api/professionalProfile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error fetching profile', error });
   }
 });
+
 
 
 //handling login
