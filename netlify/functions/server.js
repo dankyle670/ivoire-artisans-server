@@ -11,46 +11,66 @@ const app = express();
 
 // Middleware
 app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// MongoDB connection (Singleton with retry logic)
+let isConnected = false;
+const connectWithRetry = async () => {
+  if (!isConnected) {
+    try {
+      console.log(`Connecting to MongoDB with URI: ${process.env.MONGODB_URI}`);
+      await mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        maxPoolSize: 10, // Limit connection pool size
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      isConnected = true;
+      console.log('MongoDB connection established');
+    } catch (err) {
+      console.error('MongoDB connection error:', err);
+      console.log('Retrying connection in 5 seconds...');
+      setTimeout(connectWithRetry, 5000); // Retry after 5 seconds
+    }
+  }
+};
+connectWithRetry();
 
-// MongoDB connection
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.error('MONGODB_URI is not defined');
-} else {
-  console.log(`Connecting to MongoDB with URI: ${uri}`);
-}
-mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    console.error('Error details:', JSON.stringify(err, null, 2));
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Shutting down gracefully...');
+  if (isConnected) {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed');
+  }
+  process.exit(0);
 });
 
-  // Define schema and model
-  const UserSchema = new mongoose.Schema({
-      firstName: { type: String, required: true },
-      lastName: { type: String, required: true },
-      email: { type: String, required: true, unique: true },
-      password: { type: String, required: true },
-      verified: { type: Boolean, default: false },
-      isFirstLogin: { type: Boolean, default: true },
-      createdAt: { type: Date, default: Date.now },
-      isArtisan: { type: Boolean, default: false },
-      isClient: { type: Boolean, default: false },
-      countryCode: { type: String, required: false },
-      phoneNumber: { type: String, required: false },
-      artisanType: { type: String, required: false },
-      isLoggedIn: { type: Boolean, default: false },
-      subscription: { type: String, default: 'basic' },
-      profilePicture: { type: String, required: false },
-      role: { type: String, default: 'users' },
-  });
+// Define schema and models
+const UserSchema = new mongoose.Schema({
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  verified: { type: Boolean, default: false },
+  isFirstLogin: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now },
+  isArtisan: { type: Boolean, default: false },
+  isClient: { type: Boolean, default: false },
+  countryCode: { type: String, required: false },
+  phoneNumber: { type: String, required: false },
+  artisanType: { type: String, required: false },
+  isLoggedIn: { type: Boolean, default: false },
+  subscription: { type: String, default: 'basic' },
+  profilePicture: { type: String, required: false },
+  role: { type: String, default: 'users' },
+});
 
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -60,7 +80,7 @@ const messageSchema = new mongoose.Schema({
 });
 
 const ProfessionalProfileSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to User
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   bio: { type: String, required: true },
   hourlyRate: { type: Number, required: true },
   availability: { type: String, required: true },
@@ -76,8 +96,6 @@ const ProfessionalProfileSchema = new mongoose.Schema({
 });
 
 const ProfessionalProfile = mongoose.model('ProfessionalProfile', ProfessionalProfileSchema);
-
-
 const Message = mongoose.model('Message', messageSchema);
 const User = mongoose.model('User', UserSchema);
 
