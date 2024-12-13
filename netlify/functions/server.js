@@ -77,7 +77,13 @@ const messageSchema = new mongoose.Schema({
   receiverRole: { type: String, required: true, enum: ['users'] },
   message: { type: String, required: true },
   sentAt: { type: Date, default: Date.now },
+  reactions: {
+    type: Map,
+    of: Number, // Map to store emojis as keys and their counts as values
+    default: {},
+  },
 });
+
 
 const ProfessionalProfileSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -570,6 +576,38 @@ app.post('/api/login', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// handling message reaction
+app.post('/api/reactMessage', async (req, res) => {
+  const { messageId, emoji } = req.body;
+
+  if (!messageId || !emoji) {
+    return res.status(400).json({ success: false, message: 'Message ID and emoji are required' });
+  }
+
+  try {
+    // Find the message and update the reactions
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      return res.status(404).json({ success: false, message: 'Message not found' });
+    }
+
+    // Increment the emoji count
+    if (!message.reactions.has(emoji)) {
+      message.reactions.set(emoji, 1); // Initialize emoji count if it doesn't exist
+    } else {
+      message.reactions.set(emoji, message.reactions.get(emoji) + 1); // Increment count
+    }
+
+    await message.save();
+
+    return res.status(200).json({ success: true, message: 'Reaction added successfully', reactions: message.reactions });
+  } catch (error) {
+    console.error('Error reacting to message:', error);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
