@@ -588,18 +588,22 @@ app.post('/api/reactMessage', async (req, res) => {
   }
 
   try {
-    // Find the message and update the reactions
     const message = await Message.findById(messageId);
 
     if (!message) {
       return res.status(404).json({ success: false, message: 'Message not found' });
     }
 
+    // Initialize reactions if it doesn't exist
+    if (!message.reactions) {
+      message.reactions = {};
+    }
+
     // Increment the emoji count
-    if (!message.reactions.has(emoji)) {
-      message.reactions.set(emoji, 1); // Initialize emoji count if it doesn't exist
+    if (!message.reactions[emoji]) {
+      message.reactions[emoji] = 1;
     } else {
-      message.reactions.set(emoji, message.reactions.get(emoji) + 1); // Increment count
+      message.reactions[emoji] += 1;
     }
 
     await message.save();
@@ -611,14 +615,23 @@ app.post('/api/reactMessage', async (req, res) => {
   }
 });
 
+
 app.post('/api/removeReaction', async (req, res) => {
   const { messageId, emoji } = req.body;
+
+  if (!messageId || !emoji) {
+    return res.status(400).json({ success: false, message: 'Message ID and emoji are required' });
+  }
 
   try {
     const message = await Message.findById(messageId);
 
-    if (message && message.reactions[emoji]) {
-      // Reduce the reaction count or delete if it reaches 0
+    if (!message) {
+      return res.status(404).json({ success: false, message: 'Message not found' });
+    }
+
+    if (message.reactions && message.reactions[emoji]) {
+      // Decrement or delete the reaction count
       if (message.reactions[emoji] > 1) {
         message.reactions[emoji] -= 1;
       } else {
@@ -626,17 +639,15 @@ app.post('/api/removeReaction', async (req, res) => {
       }
 
       await message.save();
-      return res.status(200).json({ success: true, message: 'Reaction removed' });
+      return res.status(200).json({ success: true, message: 'Reaction removed', reactions: message.reactions });
     }
 
-    res.status(400).json({ success: false, message: 'Reaction not found' });
+    return res.status(400).json({ success: false, message: 'Reaction not found' });
   } catch (error) {
     console.error('Error removing reaction:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
-
-
 
 // handling logout
 
