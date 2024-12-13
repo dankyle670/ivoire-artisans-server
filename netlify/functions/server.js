@@ -611,6 +611,32 @@ app.post('/api/reactMessage', async (req, res) => {
   }
 });
 
+app.post('/api/removeReaction', async (req, res) => {
+  const { messageId, emoji } = req.body;
+
+  try {
+    const message = await Message.findById(messageId);
+
+    if (message && message.reactions[emoji]) {
+      // Reduce the reaction count or delete if it reaches 0
+      if (message.reactions[emoji] > 1) {
+        message.reactions[emoji] -= 1;
+      } else {
+        delete message.reactions[emoji];
+      }
+
+      await message.save();
+      return res.status(200).json({ success: true, message: 'Reaction removed' });
+    }
+
+    res.status(400).json({ success: false, message: 'Reaction not found' });
+  } catch (error) {
+    console.error('Error removing reaction:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+
 
 // handling logout
 
